@@ -5,11 +5,10 @@ import { IPCMessengerArg, IPCMessengerRequestData, IPCMessengerResponseData, IPC
 import { isBrowser } from "./HelperFunctions";
 import Config from "./Config";
 
-const consoleLog = isBrowser() ? console : require( "electron-log" );
-
 export class AbstractIPCMessenger extends EventEmitter {
 
 	channel: string = Config.channel;
+	console: Console = Config.console;
 	debug: boolean = Config.debug;
 	defaultTimeout: number = Config.timeout;
 	
@@ -29,10 +28,10 @@ export class AbstractIPCMessenger extends EventEmitter {
 			if( label === "response" ) {
 				this.onResponse( id, data as IPCMessengerResponseData );
 			} else {
-				this.debug && consoleLog.debug( `IPCMessenger.on( "${label}", { id: ${id}, data: ${JSON.stringify(data)} } )` );
+				this.debug && this.console.debug( `IPCMessenger.on( "${label}", { id: ${id}, data: ${JSON.stringify(data)} } )` );
 				
 				this.emit( label, data, (  err: NodeJS.ErrnoException|String|null, res?: any ): void  => {
-					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, err=${err}, res=${JSON.stringify(res)} )` );
+					this.debug && this.console.debug( `IPCMessenge.reply( ${id}, err=${err}, res=${JSON.stringify(res)} )` );
 
 					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
 					const payload = { data: { err, res }, id, label: "response" };
@@ -42,7 +41,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 						if( e.message !== "Object has been destroyed" ) {
 							throw e;
 						}
-						this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
+						this.debug && this.console.debug( "IPCMessenger: Target window has been closed." );
 					}
 				} );
 			}
@@ -61,7 +60,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 
 	onResponse( id: number, data: IPCMessengerResponseData ): void {
-		this.debug && consoleLog.debug( `IPCMessenger.onResponse( ${id}, ${JSON.stringify(data)} )` );
+		this.debug && this.console.debug( `IPCMessenger.onResponse( ${id}, ${JSON.stringify(data)} )` );
 
 		const entry = this.waiting.entries[ id ];
 
@@ -96,7 +95,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 		const payload = { data, id, label, };
 
 		target.send( this.channel, payload );
-		this.debug && consoleLog.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
+		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
@@ -104,7 +103,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 			}
 			const timer = setTimeout( () => {
 				this.cleanUpAfterMessage( id );
-				consoleLog.error( `IPCMessenger.timeout( ${id}, "${label}", ${JSON.stringify(data)} )` );
+				this.console.error( `IPCMessenger.timeout( ${id}, "${label}", ${JSON.stringify(data)} )` );
 			}, timeout);
 			this.waiting.entries[ id ] = { reject, resolve, timer, };
 		} );
