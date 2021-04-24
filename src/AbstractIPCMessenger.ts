@@ -35,7 +35,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 				this.debug && consoleLog.debug( `IPCMessenger.on( "${label}", { id: ${id}, data: ${JSON.stringify(data)} } )` );
 				
 				this.emit( label, data, (  err: NodeJS.ErrnoException|String|null, res?: any ): void  => {
-					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, err=${err}, result=${JSON.stringify(res)} )` );
+					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, err=${err}, res=${JSON.stringify(res)} )` );
 
 					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
 					try {
