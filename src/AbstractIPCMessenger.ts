@@ -33,10 +33,13 @@ export class AbstractIPCMessenger extends EventEmitter {
 				this.onResponse( id, data as IPCMessengerResponseData );
 			} else {
 				this.debug && consoleLog.debug( `IPCMessenger.on( "${label}", { id: ${id}, data: ${JSON.stringify(data)} } )` );
-				this.emit( label, data, ( replyData: { [key: string]: any } = {} ): void  =>{
-					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, ${JSON.stringify(replyData)} )` );
+				
+				this.emit( label, data, (  err: NodeJS.ErrnoException|String|null, res?: any ): void  => {
+					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, err=${err}, result=${JSON.stringify(res)} )` );
+
+					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
 					try {
-						event.sender.send( "message", { data: JSON.stringify(replyData), id, label: "response" } );
+						event.sender.send( "message", { data: JSON.stringify( { err, res } ), id, label: "response" } );
 					} catch( err ) {
 						if( err.message !== "Object has been destroyed" ) {
 							this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
@@ -70,13 +73,10 @@ export class AbstractIPCMessenger extends EventEmitter {
 		}
 
 		const { reject, resolve, } = entry;
-		if( data.success ) {
-			resolve( data );
+		if( data.err ) {
+			reject( new Error( data.err as string ) );
 		} else {
-			const err = (data.error)
-				? ( (typeof data.error === "string" ) ? data.error : JSON.stringify( data.error ) )
-				: "Unknown Error";
-			reject( new Error( err ) );
+			resolve( data.res );
 		}
 		this.cleanUpAfterMessage( id );
 	}
@@ -115,3 +115,4 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 	
 }
+
