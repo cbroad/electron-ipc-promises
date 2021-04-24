@@ -34,7 +34,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 			} else {
 				this.debug && consoleLog.debug( `IPCMessenger.on("${label}", { id: ${id}, data: ${JSON.stringify(data)} } )`, label, id, data );
 				this.emit( label, data, ( replyData: { [key: string]: any } = {} ): void  =>{
-					this.debug && consoleLog.debug( "IPCMessenger: Sending reply to message:%j with: %j", id, replyData );
+					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, ${JSON.stringify(replyData)} )` );
 					try {
 						event.sender.send( "message", { data: JSON.stringify(replyData), id, label: "response" } );
 					} catch( err ) {
@@ -61,7 +61,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 
 	onResponse( id: number, data: IPCMessengerResponseData ): void {
-		this.debug && consoleLog.debug( `IPCMessenger.onResponse(${id}, ${JSON.stringify(data)}})` );
+		this.debug && consoleLog.debug( `IPCMessenger.onResponse( ${id}, ${JSON.stringify(data)} )` );
 
 		const entry = this.waiting.entries[ id ];
 
@@ -100,7 +100,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 		const payload = { data: JSON.stringify( data ), id, label, };
 
 		target.send( "message", payload );
-		this.debug && consoleLog.debug( `IPCMessenger.send(${id}, "${label}", ${JSON.stringify(data)}})` );
+		this.debug && consoleLog.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
@@ -108,7 +108,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 			}
 			const timer = setTimeout( () => {
 				this.cleanUpAfterMessage( id );
-				consoleLog.error( `IPCMessenger.timeout(${id}, "${label}", ${JSON.stringify(data)}})` );
+				consoleLog.error( `IPCMessenger.timeout( ${id}, "${label}", ${JSON.stringify(data)} )` );
 			}, timeout);
 			this.waiting.entries[ id ] = { reject, resolve, timer, };
 		} );
