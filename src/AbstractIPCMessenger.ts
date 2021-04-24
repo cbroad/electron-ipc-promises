@@ -28,11 +28,11 @@ export class AbstractIPCMessenger extends EventEmitter {
 			let label = payload.label;
 			let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
 
-			this.debug && consoleLog.debug( `IPCMessenger.on(%j, { id: %j, data: %j } )`, label, id, data );
 
 			if( label === "response" ) {
 				this.onResponse( id, data as IPCMessengerResponseData );
 			} else {
+				this.debug && consoleLog.debug( `IPCMessenger.on("${label}", { id: ${id}, data: ${JSON.stringify(data)} } )`, label, id, data );
 				this.emit( label, data, ( replyData: { [key: string]: any } = {} ): void  =>{
 					this.debug && consoleLog.debug( "IPCMessenger: Sending reply to message:%j with: %j", id, replyData );
 					try {
@@ -61,7 +61,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 
 	onResponse( id: number, data: IPCMessengerResponseData ): void {
-		this.debug && consoleLog.debug( `IPCMessenger.response(${id}, ${JSON.stringify(data)}})` );
+		this.debug && consoleLog.debug( `IPCMessenger.onResponse(${id}, ${JSON.stringify(data)}})` );
 
 		const entry = this.waiting.entries[ id ];
 
@@ -100,7 +100,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 		const payload = { data: JSON.stringify( data ), id, label, };
 
 		target.send( "message", payload );
-		consoleLog.log( `IPCMessenger.send(${id}, "${label}", ${JSON.stringify(data)}})` );
+		this.debug && consoleLog.debug( `IPCMessenger.send(${id}, "${label}", ${JSON.stringify(data)}})` );
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
@@ -108,7 +108,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 			}
 			const timer = setTimeout( () => {
 				this.cleanUpAfterMessage( id );
-				consoleLog.log( `IPCMessenger.timeout(${id}, "${label}", ${JSON.stringify(data)}})` );
+				consoleLog.error( `IPCMessenger.timeout(${id}, "${label}", ${JSON.stringify(data)}})` );
 			}, timeout);
 			this.waiting.entries[ id ] = { reject, resolve, timer, };
 		} );
