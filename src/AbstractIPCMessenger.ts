@@ -26,7 +26,9 @@ export class AbstractIPCMessenger extends EventEmitter {
 			const payload: IPCMessengerArg = args[0];
 			let id = payload.id;
 			let label = payload.label;
-			let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
+			// let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
+
+			let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? payload.data : {};
 
 
 			if( label === "response" ) {
@@ -39,7 +41,8 @@ export class AbstractIPCMessenger extends EventEmitter {
 
 					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
 					try {
-						event.sender.send( "message", { data: JSON.stringify( { err, res } ), id, label: "response" } );
+						// event.sender.send( "message", { data: JSON.stringify( { err, res } ), id, label: "response" } );
+						event.sender.send( "message", { data: { err, res }, id, label: "response" } );
 					} catch( err ) {
 						if( err.message !== "Object has been destroyed" ) {
 							this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
@@ -97,7 +100,8 @@ export class AbstractIPCMessenger extends EventEmitter {
 		const timeout: number = ( typeof args[0] === "number" ) ? args.shift() : this.defaultTimeout;
 
 		const id = ( this.waiting.count++ );
-		const payload = { data: JSON.stringify( data ), id, label, };
+		// const payload = { data: JSON.stringify( data ), id, label, };
+		const payload = { data, id, label, };
 
 		target.send( "message", payload );
 		this.debug && consoleLog.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
