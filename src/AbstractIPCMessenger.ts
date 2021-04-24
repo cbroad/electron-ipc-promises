@@ -24,11 +24,13 @@ export class AbstractIPCMessenger extends EventEmitter {
 
 		electronIPC.on("message", ( event: (Electron.IpcMainEvent | Electron.IpcRendererEvent), ...args: any[] ): void => {
 			const payload: IPCMessengerArg = args[0];
-			let id = payload.id;
-			let label = payload.label;
-			// let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
+			// let id = payload.id;
+			// let label = payload.label;
+			// // let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
 
-			let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? payload.data : {};
+			// let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? payload.data : {};
+
+			let { data, label, id } = payload;
 
 
 			if( label === "response" ) {
