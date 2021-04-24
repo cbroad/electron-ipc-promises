@@ -1,7 +1,7 @@
 import Electron, { IpcMain } from "electron";
 import {EventEmitter} from "events";
 
-import { IPCMessengerArg, IPCMessengerResponseData, IPCMessengerWaiting, IPCMessengerWaitingEntry } from "./IPCMessengerTypes";
+import { IPCMessengerArg, IPCMessengerRequestData, IPCMessengerResponseData, IPCMessengerWaiting, IPCMessengerWaitingEntry } from "./IPCMessengerTypes";
 import { isBrowser } from "./HelperFunctions";
 import Config from "./Config";
 
@@ -23,15 +23,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 
 
 		electronIPC.on("message", ( event: (Electron.IpcMainEvent | Electron.IpcRendererEvent), ...args: any[] ): void => {
-			const payload: IPCMessengerArg = args[0];
-			// let id = payload.id;
-			// let label = payload.label;
-			// // let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? JSON.parse( payload.data ) : {};
-
-			// let data: { [key:string]: any } = payload.hasOwnProperty( "data" ) ? payload.data : {};
-
-			let { data, label, id } = payload;
-
+			const { data, label, id } = args[0] as IPCMessengerArg;
 
 			if( label === "response" ) {
 				this.onResponse( id, data as IPCMessengerResponseData );
@@ -43,14 +35,12 @@ export class AbstractIPCMessenger extends EventEmitter {
 
 					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
 					try {
-						// event.sender.send( "message", { data: JSON.stringify( { err, res } ), id, label: "response" } );
 						event.sender.send( "message", { data: { err, res }, id, label: "response" } );
-					} catch( err ) {
-						if( err.message !== "Object has been destroyed" ) {
-							this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
-						} else {
-							throw err;
+					} catch( e ) {
+						if( e.message !== "Object has been destroyed" ) {
+							throw e;
 						}
+						this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
 					}
 				} );
 			}
@@ -87,18 +77,18 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 
 
-	// protected async _send( label: string ): Promise<IPCMessengerResponseData>;
-	// protected async _send( label: string, data: { [key:string]: any} ): Promise<IPCMessengerResponseData>;
-	// protected async _send( label: string, timeout: number ): Promise<IPCMessengerResponseData>;
-	// protected async _send( label: string, data: { [key:string]: any}, timeout?: number ): Promise<IPCMessengerResponseData>;
-	// protected async _send( target: Electron.WebContents, label: string ): Promise<IPCMessengerResponseData>;
-	// protected async _send( target: Electron.WebContents, label: string, data: { [key:string]: any } ): Promise<IPCMessengerResponseData>;
-	// protected async _send( target: Electron.WebContents, label: string, timeout: number ): Promise<IPCMessengerResponseData>;
-	// protected async _send( target: Electron.WebContents, label: string, data: { [key:string]: any }, timeout: number ): Promise<IPCMessengerResponseData>;
-	protected async _send( ...args: any[] ): Promise<IPCMessengerResponseData> {
+	// protected async _send( label: string ): Promise<any>;
+	// protected async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
+	// protected async _send( label: string, timeout: number ): Promise<any>;
+	// protected async _send( label: string, data: IPCMessengerRequestData, timeout?: number ): Promise<any>;
+	// protected async _send( target: Electron.WebContents, label: string ): Promise<any>;
+	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
+	// protected async _send( target: Electron.WebContents, label: string, timeout: number ): Promise<any>;
+	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	protected async _send( ...args: any[] ): Promise<any> {
 		const target: Electron.IpcRenderer|Electron.WebContents = ( typeof args[0] ==="string" ) ? this.electronIPC as Electron.IpcRenderer : args.shift() as Electron.WebContents ;
 		const label: string = args.shift() as string;
-		const data: {[key:string]:any} = ( typeof args[0] === "object" ) ? args.shift() : {};
+		const data: IPCMessengerRequestData = ( typeof args[0] === "object" ) ? args.shift() as IPCMessengerRequestData : {};
 		const timeout: number = ( typeof args[0] === "number" ) ? args.shift() : this.defaultTimeout;
 
 		const id = ( this.waiting.count++ );

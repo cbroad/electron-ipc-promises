@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 
 import { AbstractIPCMessenger } from "./AbstractIPCMessenger";
-import { IPCMessengerResponseData } from "./IPCMessengerTypes";
+import { IPCMessengerRequestData } from "./IPCMessengerTypes";
 
 export class MainThreadIPCMessenger extends AbstractIPCMessenger {
 
@@ -9,11 +9,11 @@ export class MainThreadIPCMessenger extends AbstractIPCMessenger {
 		super( ipcMain );
 	}
 
-	async send( target: Electron.WebContents, label: string ): Promise<IPCMessengerResponseData>;
-	async send( target: Electron.WebContents, label: string, data: { [key:string]: any } ): Promise<IPCMessengerResponseData>;
-	async send( target: Electron.WebContents, label: string, timeout: number ): Promise<IPCMessengerResponseData>;
-	async send( target: Electron.WebContents, label: string, data: { [key:string]: any }, timeout: number ): Promise<IPCMessengerResponseData>;
-	async send( target: Electron.WebContents, label: string, dataOrTimeout?: number|{[key:string]:any}, timeout?: number ): Promise<IPCMessengerResponseData> {
+	async send( target: Electron.WebContents, label: string ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, timeout: number ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, dataOrTimeout?: number|{[key:string]:any}, timeout?: number ): Promise<any> {
 		return super._send( target, label, dataOrTimeout, timeout );
 	}
 
