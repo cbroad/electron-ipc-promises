@@ -1,0 +1,31 @@
+{
+	"author": {
+		"email": "carl.broadbent@gmail.com",
+		"name": "Carl Broadbent"
+	},
+	"description": "IPC Messages that use promises to handle responses.",
+	"dependencies": {
+		"electron-log": "^2.2.17"
+	},
+	"devDependencies": {
+		"@types/electron": "^1.6.10",
+		"@types/node": "^14.11.2",
+		"electron": "^11.0.1",
+		"ts-node": "^9.0.0",
+		"typescript": "^4.0.3"
+	},
+	"files": [
+		"js/*",
+		"types/*"
+	],
+	"license": "MIT",
+	"main": "js/index.js",
+	"name": "electron-ipc-promises",
+	"repository": "github:cbroad/electron-ipc-promises",
+	"scripts": {
+		"build": "tsc",
+		"clean": "rm -rf js node_modules types package-lock.json",
+		"prepare": "npm run build"
+	},
+	"version": "0.0.1"
+}
