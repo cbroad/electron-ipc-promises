@@ -79,16 +79,14 @@ export class AbstractIPCMessenger extends EventEmitter {
 
 	// protected async _send( label: string ): Promise<any>;
 	// protected async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// protected async _send( label: string, timeout: number ): Promise<any>;
-	// protected async _send( label: string, data: IPCMessengerRequestData, timeout?: number ): Promise<any>;
+	// protected async _send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
 	// protected async _send( target: Electron.WebContents, label: string ): Promise<any>;
 	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// protected async _send( target: Electron.WebContents, label: string, timeout: number ): Promise<any>;
 	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
 	protected async _send( ...args: any[] ): Promise<any> {
 		const target: Electron.IpcRenderer|Electron.WebContents = ( typeof args[0] ==="string" ) ? this.electronIPC as Electron.IpcRenderer : args.shift() as Electron.WebContents ;
 		const label: string = args.shift() as string;
-		const data: IPCMessengerRequestData = ( typeof args[0] === "object" ) ? args.shift() as IPCMessengerRequestData : {};
+		const data: IPCMessengerRequestData = args.shift();
 		const timeout: number = ( typeof args[0] === "number" ) ? args.shift() : this.defaultTimeout;
 
 		const id = ( this.waiting.count++ );

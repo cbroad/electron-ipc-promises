@@ -11,9 +11,8 @@ export class BrowserIPCMessenger extends AbstractIPCMessenger {
 
 	async send( label: string ): Promise<any>;
 	async send( label: string, data: IPCMessengerRequestData ): Promise<any>;
-	async send( label: string, timeout: number ): Promise<any>;
-	async send( label: string, data: IPCMessengerRequestData, timeout?: number ): Promise<any>;
-	async send( label: string, dataOrTimeout?: number|IPCMessengerRequestData, timeout?: number ): Promise<any> {
-		return super._send( label, dataOrTimeout, timeout );
+	async send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	async send( label: string, data?: IPCMessengerRequestData, timeout?: number ): Promise<any> {
+		return super._send( label, data, timeout );
 	}
 }
