@@ -22,7 +22,6 @@ export class AbstractIPCMessenger extends EventEmitter {
 		this.electronIPC = electronIPC ;
 
 
-		// @ts-ignore
 		electronIPC.on("message", ( event: (Electron.IpcMainEvent | Electron.IpcRendererEvent), ...args: any[] ): void => {
 			const payload: IPCMessengerArg = args[0];
 			let id = payload.id;
@@ -34,22 +33,18 @@ export class AbstractIPCMessenger extends EventEmitter {
 			if( label === "response" ) {
 				this.onResponse( id, data as IPCMessengerResponseData );
 			} else {
-				this.emit( label, data, reply );
-			}
-
-			const self = this;
-
-			function reply( replyData: { [key: string]: any } = {} ): void {
-				self.debug && consoleLog.debug( "IPCMessenger: Sending reply to message:%j with: %j", id, replyData );
-				try {
-					event.sender.send( "message", { data: JSON.stringify(replyData), id, label: "response" } );
-				} catch( err ) {
-					if( err.message !== "Object has been destroyed" ) {
-						self.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
-					} else {
-						throw err;
+				this.emit( label, data, ( replyData: { [key: string]: any } = {} ): void  =>{
+					this.debug && consoleLog.debug( "IPCMessenger: Sending reply to message:%j with: %j", id, replyData );
+					try {
+						event.sender.send( "message", { data: JSON.stringify(replyData), id, label: "response" } );
+					} catch( err ) {
+						if( err.message !== "Object has been destroyed" ) {
+							this.debug && consoleLog.debug( "IPCMessenger: Target window has been closed." );
+						} else {
+							throw err;
+						}
 					}
-				}
+				} );
 			}
 		} );
 	}
