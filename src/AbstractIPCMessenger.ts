@@ -32,7 +32,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 			if( label === "response" ) {
 				this.onResponse( id, data as IPCMessengerResponseData );
 			} else {
-				this.debug && consoleLog.debug( `IPCMessenger.on("${label}", { id: ${id}, data: ${JSON.stringify(data)} } )`, label, id, data );
+				this.debug && consoleLog.debug( `IPCMessenger.on( "${label}", { id: ${id}, data: ${JSON.stringify(data)} } )` );
 				this.emit( label, data, ( replyData: { [key: string]: any } = {} ): void  =>{
 					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, ${JSON.stringify(replyData)} )` );
 					try {
