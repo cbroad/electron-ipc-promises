@@ -9,6 +9,7 @@ const consoleLog = isBrowser() ? console : require( "electron-log" );
 
 export class AbstractIPCMessenger extends EventEmitter {
 
+	channel: string = Config.channel;
 	debug: boolean = Config.debug;
 	defaultTimeout: number = Config.timeout;
 	
@@ -22,7 +23,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 		this.electronIPC = electronIPC ;
 
 
-		electronIPC.on("message", ( event: (Electron.IpcMainEvent | Electron.IpcRendererEvent), ...args: any[] ): void => {
+		electronIPC.on( this.channel, ( event: (Electron.IpcMainEvent | Electron.IpcRendererEvent), ...args: any[] ): void => {
 			const { data, label, id } = args[0] as IPCMessengerArg;
 
 			if( label === "response" ) {
@@ -34,8 +35,9 @@ export class AbstractIPCMessenger extends EventEmitter {
 					this.debug && consoleLog.debug( `IPCMessenge.reply( ${id}, err=${err}, res=${JSON.stringify(res)} )` );
 
 					err = (!err || (typeof err === "string") )? err : (err as NodeJS.ErrnoException).message;
+					const payload = { data: { err, res }, id, label: "response" };
 					try {
-						event.sender.send( "message", { data: { err, res }, id, label: "response" } );
+						event.sender.send( this.channel, payload );
 					} catch( e ) {
 						if( e.message !== "Object has been destroyed" ) {
 							throw e;
@@ -77,13 +79,13 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 
 
-	// protected async _send( label: string ): Promise<any>;
-	// protected async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// protected async _send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
-	// protected async _send( target: Electron.WebContents, label: string ): Promise<any>;
-	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
-	protected async _send( ...args: any[] ): Promise<any> {
+	// async _send( label: string ): Promise<any>;
+	// async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
+	// async _send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	// async _send( target: Electron.WebContents, label: string ): Promise<any>;
+	// async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
+	// async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	async _send( ...args: any[] ): Promise<any> {
 		const target: Electron.IpcRenderer|Electron.WebContents = ( typeof args[0] ==="string" ) ? this.electronIPC as Electron.IpcRenderer : args.shift() as Electron.WebContents ;
 		const label: string = args.shift() as string;
 		const data: IPCMessengerRequestData = args.shift();
@@ -93,7 +95,7 @@ export class AbstractIPCMessenger extends EventEmitter {
 		// const payload = { data: JSON.stringify( data ), id, label, };
 		const payload = { data, id, label, };
 
-		target.send( "message", payload );
+		target.send( this.channel, payload );
 		this.debug && consoleLog.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
@@ -109,4 +111,3 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 	
 }
-

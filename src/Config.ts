@@ -1,4 +1,5 @@
 export default {
-    "debug": true,
-    "timeout": 10000 
+    "channel": "IPCMessenger",
+    "debug": false,
+    "timeout": 10000,
 };
