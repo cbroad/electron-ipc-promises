@@ -7,7 +7,7 @@ export default {
 
 function getConsole() {
     try {
-        return require( "electron-console" );
+        return require( "electron-log" );
     } catch(e) {
         return console;
     }
