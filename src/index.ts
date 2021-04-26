@@ -64,7 +64,7 @@ class AbstractIPCMessenger extends EventEmitter {
 
 
 	cleanUpAfterMessage( id: number ) {
-		this.console.log( `IPCMessenger.cleanupAfterMessage( ${id} )` );
+		// this.console.log( `IPCMessenger.cleanupAfterMessage( ${id} )` );
 		if( this.waiting.entries[ id ] ) {
 			const entry = this.waiting.entries[ id ];
 			if(entry.timer) {
@@ -113,8 +113,7 @@ class AbstractIPCMessenger extends EventEmitter {
 		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
 		if( this.electronIPC !== target ) {
-			( target as Electron.WebContents ).once( "destroyed", () => {
-				console.log( "ONDESTROYED" );
+			( target as Electron.WebContents ).on( "destroyed", () => {
 				this.cleanUpAfterMessage( id );
 			} );
 		}
