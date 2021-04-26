@@ -115,19 +115,6 @@ class AbstractIPCMessenger extends EventEmitter {
 		target.send( this.channel, payload );
 		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
-		let destroyListener: ( ()=>void )|undefined;
-
-		if( this.electronIPC !== target ) {
-			const listener: ( () => void ) = () => { this.cleanUpAfterMessage( id ); };
-			( target as Electron.WebContents ).on( "destroyed", () => {
-				this.cleanUpAfterMessage( id );
-			} );
-			destroyListener = () => { 
-				if( target ) {
-					target.removeListener( "destroyed", listener );
-			 	}
-			}; 
-		}
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
@@ -137,6 +124,18 @@ class AbstractIPCMessenger extends EventEmitter {
 				this.cleanUpAfterMessage( id );
 				this.console.error( `IPCMessenger.timeout( ${id}, "${label}", ${JSON.stringify(data)} )` );
 			}, timeout);
+
+			let destroyListener: ( ()=>void )|undefined;
+			if( this.electronIPC !== target ) {
+				const listener: ( () => void ) = () => { this.cleanUpAfterMessage( id ); };
+				( target as Electron.WebContents ).on( "destroyed", listener );
+				destroyListener = () => { 
+					if( target ) {
+						target.removeListener( "destroyed", listener );
+					 }
+				}; 
+			}
+
 			this.waiting.entries[ id ] = { destroyListener, reject, resolve, timer, };
 		} );
 	}
