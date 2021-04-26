@@ -1,11 +1,24 @@
-import Electron, { IpcMain } from "electron";
+import Electron, { ipcRenderer, ipcMain } from "electron";
 import {EventEmitter} from "events";
 
-import { IPCMessengerArg, IPCMessengerRequestData, IPCMessengerResponseData, IPCMessengerWaiting, IPCMessengerWaitingEntry } from "./IPCMessengerTypes";
-import { isBrowser } from "./HelperFunctions";
 import Config from "./Config";
 
-export class AbstractIPCMessenger extends EventEmitter {
+
+
+type IPCMessengerRequestArg = { data: IPCMessengerRequestData, id: number, label: string };
+type IPCMessengerResponseArg = { data: IPCMessengerResponseData, id: number, label: "response" };
+type IPCMessengerArg = IPCMessengerRequestArg|IPCMessengerResponseArg;
+
+type IPCMessengerRequestData = any;
+type IPCMessengerResponseData = { err: NodeJS.ErrnoException|string|null, res?: any };
+
+type IPCMessengerWaiting = { count:number, entries: { [key: number]: IPCMessengerWaitingEntry } };
+
+type IPCMessengerWaitingEntry = { reject: (reason?:unknown)=>void, resolve: (value:unknown)=>void, timer: NodeJS.Timeout };
+
+
+
+class AbstractIPCMessenger extends EventEmitter {
 
 	channel: string = Config.channel;
 	console: Console = Config.console;
@@ -110,3 +123,36 @@ export class AbstractIPCMessenger extends EventEmitter {
 	}
 	
 }
+
+export class IPCMessengerMain extends AbstractIPCMessenger {
+
+	constructor( ) {
+		super( ipcMain );
+	}
+
+	async send( target: Electron.WebContents, label: string ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	async send( target: Electron.WebContents, label: string, data?: IPCMessengerRequestData, timeout?: number ): Promise<any> {
+		return super._send( target, label, data, timeout );
+	}
+
+
+}
+
+class IPCMessengerRenderer extends AbstractIPCMessenger {
+
+	constructor() {
+		super( ipcRenderer );
+	}
+
+	async send( label: string ): Promise<any>;
+	async send( label: string, data: IPCMessengerRequestData ): Promise<any>;
+	async send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
+	async send( label: string, data?: IPCMessengerRequestData, timeout?: number ): Promise<any> {
+		return super._send( label, data, timeout );
+	}
+}
+
+
+export const IPCMessenger = (process && process.type === 'renderer') ? new IPCMessengerRenderer() : new IPCMessengerMain();
