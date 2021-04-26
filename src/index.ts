@@ -3,6 +3,7 @@ import {EventEmitter} from "events";
 
 import Config from "./Config";
 
+const IS_RENDERER: boolean = (process && process.type === 'renderer');
 
 
 type IPCMessengerRequestArg = { data: IPCMessengerRequestData, id: number, label: string };
@@ -63,6 +64,7 @@ class AbstractIPCMessenger extends EventEmitter {
 
 
 	cleanUpAfterMessage( id: number ) {
+		this.console.log( `IPCMessenger.cleanupAfterMessage( ${id} )` );
 		if( this.waiting.entries[ id ] ) {
 			const entry = this.waiting.entries[ id ];
 			if(entry.timer) {
@@ -110,6 +112,12 @@ class AbstractIPCMessenger extends EventEmitter {
 		target.send( this.channel, payload );
 		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
+		if( this.electronIPC !== target ) {
+			( target as Electron.WebContents ).once( "destroyed", () => {
+				this.cleanUpAfterMessage( id );
+			} );
+		}
+
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
 				return resolve;
@@ -155,4 +163,4 @@ class IPCMessengerRenderer extends AbstractIPCMessenger {
 }
 
 
-export const IPCMessenger = (process && process.type === 'renderer') ? new IPCMessengerRenderer() : new IPCMessengerMain();
+export const IPCMessenger = IS_RENDERER ? new IPCMessengerRenderer() : new IPCMessengerMain();
