@@ -112,11 +112,12 @@ class AbstractIPCMessenger extends EventEmitter {
 		target.send( this.channel, payload );
 		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
-		// if( this.electronIPC !== target ) {
-		// 	( target as Electron.WebContents ).once( "destroyed", () => {
-		// 		this.cleanUpAfterMessage( id );
-		// 	} );
-		// }
+		if( this.electronIPC !== target ) {
+			( target as Electron.WebContents ).once( "destroyed", () => {
+				console.log( "ONDESTROYED" );
+				this.cleanUpAfterMessage( id );
+			} );
+		}
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
 			if( timeout == 0 ) {
