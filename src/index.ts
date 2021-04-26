@@ -15,7 +15,7 @@ type IPCMessengerResponseData = { err: NodeJS.ErrnoException|string|null, res?: 
 
 type IPCMessengerWaiting = { count:number, entries: { [key: number]: IPCMessengerWaitingEntry } };
 
-type IPCMessengerWaitingEntry = { reject: (reason?:unknown)=>void, resolve: (value:unknown)=>void, timer: NodeJS.Timeout };
+type IPCMessengerWaitingEntry = { destroyListener?: ()=>void, reject: (reason?:unknown)=>void, resolve: (value:unknown)=>void, timer: NodeJS.Timeout, };
 
 
 
@@ -67,8 +67,11 @@ class AbstractIPCMessenger extends EventEmitter {
 		// this.console.log( `IPCMessenger.cleanupAfterMessage( ${id} )` );
 		if( this.waiting.entries[ id ] ) {
 			const entry = this.waiting.entries[ id ];
-			if(entry.timer) {
-				clearTimeout(entry.timer);
+			if( entry.destroyListener ) {
+				entry.destroyListener();
+			}
+			if( entry.timer ) {
+				clearTimeout( entry.timer );
 			}
 			delete this.waiting.entries[ id ];
 		}
@@ -112,10 +115,18 @@ class AbstractIPCMessenger extends EventEmitter {
 		target.send( this.channel, payload );
 		this.debug && this.console.debug( `IPCMessenger.send( ${id}, "${label}", ${JSON.stringify(data)} )` );
 
+		let destroyListener: ( ()=>void )|undefined;
+
 		if( this.electronIPC !== target ) {
+			const listener: ( () => void ) = () => { this.cleanUpAfterMessage( id ); };
 			( target as Electron.WebContents ).on( "destroyed", () => {
 				this.cleanUpAfterMessage( id );
 			} );
+			destroyListener = () => { 
+				if( target ) {
+					target.removeListener( "destroyed", listener );
+			 	}
+			}; 
 		}
 
 		return new Promise( (resolve: ((value:any)=>void), reject: ((reason?:any)=>void) ) => {
@@ -126,7 +137,7 @@ class AbstractIPCMessenger extends EventEmitter {
 				this.cleanUpAfterMessage( id );
 				this.console.error( `IPCMessenger.timeout( ${id}, "${label}", ${JSON.stringify(data)} )` );
 			}, timeout);
-			this.waiting.entries[ id ] = { reject, resolve, timer, };
+			this.waiting.entries[ id ] = { destroyListener, reject, resolve, timer, };
 		} );
 	}
 	
