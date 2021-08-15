@@ -96,13 +96,13 @@ class AbstractIPCMessenger extends EventEmitter {
 	}
 
 
-	// async _send( label: string ): Promise<any>;
-	// async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// async _send( label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
-	// async _send( target: Electron.WebContents, label: string ): Promise<any>;
-	// async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
-	// async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout: number ): Promise<any>;
-	async _send( ...args: any[] ): Promise<any> {
+	protected async _send( label: string ): Promise<any>;
+	protected async _send( label: string, data: IPCMessengerRequestData ): Promise<any>;
+	protected async _send( label: string, data: IPCMessengerRequestData, timeout?: number ): Promise<any>;
+	protected async _send( target: Electron.WebContents, label: string ): Promise<any>;
+	protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData ): Promise<any>;
+	protected async _send( target: Electron.WebContents, label: string, data: IPCMessengerRequestData, timeout?: number ): Promise<any>;
+	protected async _send( ...args: any[] ): Promise<any> {
 		const target: Electron.IpcRenderer|Electron.WebContents = ( typeof args[0] ==="string" ) ? this.electronIPC as Electron.IpcRenderer : args.shift() as Electron.WebContents ;
 		const label: string = args.shift() as string;
 		const data: IPCMessengerRequestData = args.shift();
