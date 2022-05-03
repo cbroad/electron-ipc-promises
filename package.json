@@ -25,7 +25,8 @@
 	"scripts": {
 		"build": "tsc",
 		"clean": "rm -rf js node_modules types package-lock.json",
-		"prepare": "npm run build"
+		"prepare": "npm run build",
+		"rebuild": "npm run clean && npm i"
 	},
 	"version": "0.0.1"
 }
